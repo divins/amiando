@@ -11,12 +11,13 @@ module Amiando
     include Amiando::Autorun
 
     attr_accessor :request, :response, :errors
-    attr_reader :result, :success
+    attr_reader :result, :success, :after_populate_callbacks
 
     autorun :request, :response, :result, :errors, :success
 
     def initialize(&block)
       @populator = block
+      @after_populate_callbacks = []
       @populator ||= Proc.new do |response_body, result|
         result.errors = response_body['errors']
         response_body['success']
@@ -30,6 +31,19 @@ module Amiando
         @result = @populator.call(response_body, self)
       end
       @success = response_body['success']
+      run_after_populate_callbacks
+
+      @success
+    end
+
+    def on_populate(&block)
+      after_populate_callbacks << block
+    end
+
+    def run_after_populate_callbacks
+      after_populate_callbacks.each do |callback|
+        callback.call(self)
+      end
     end
   end
 end
