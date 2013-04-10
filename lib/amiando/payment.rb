@@ -13,7 +13,7 @@ module Amiando
       object = Result.new do |response_body, result|
         if response_body['success']
           response_body['payments'].map do |payment|
-            find(payment)
+            new({id: payment})
           end
         else
           result.errors = response_body['errors']
